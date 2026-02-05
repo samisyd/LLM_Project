@@ -57,7 +57,7 @@ def process_inputs(audio_filepath, image_filepath):
         # Generate voice response
         try:
             filename = "final.mp3"
-            new_audio_file_path = f"{output_dir}\\{filename}"
+            new_audio_file_path = f"{output_dir}//{filename}"
             logging.info(f"New audio file path: {new_audio_file_path}")
             voice_of_doctor = text_to_speech_with_gtts(input_text=doctor_response, output_filepath=new_audio_file_path)
         except Exception as e:
