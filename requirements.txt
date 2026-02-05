@@ -1,10 +1,8 @@
 python-dotenv
 groq==0.15.0; python_version >= '3.8'
-elevenlabs
 gtts
 SpeechRecognition
 streamlit
 uvicorn
 pydub
 dotenv
-

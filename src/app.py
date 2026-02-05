@@ -10,7 +10,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 from llm_brain import encode_image, analyze_image_with_query
 from patient_voice import transcribe_with_groq
-from doctors_voice import text_to_speech_with_elevenlabs
+from doctors_voice import text_to_speech_with_gtts 
 from utils import createDirIfNotExists
 
 # Create a folder for saving audio files in the current directory
@@ -59,7 +59,7 @@ def process_inputs(audio_filepath, image_filepath):
             filename = "final.mp3"
             new_audio_file_path = f"{output_dir}\\{filename}"
             logging.info(f"New audio file path: {new_audio_file_path}")
-            voice_of_doctor = text_to_speech_with_elevenlabs(input_text=doctor_response, output_filepath=new_audio_file_path)
+            voice_of_doctor = text_to_speech_with_gtts(input_text=doctor_response, output_filepath=new_audio_file_path)
         except Exception as e:
             logging.error(f"Error generating voice response: {e}")
             raise

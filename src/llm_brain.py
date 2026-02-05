@@ -30,8 +30,6 @@ def encode_image(image_path):
 
 #Step3: Setup Multimodal LLM 
 
-query="Is there something wrong with my face?"
-model="meta-llama/llama-4-scout-17b-16e-instruct"
 
 def analyze_image_with_query(query, model, encoded_image):
     try:
