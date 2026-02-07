@@ -31,6 +31,7 @@ import base64
 from groq import Groq
 from dotenv import load_dotenv
 import logging
+from langsmith import traceable
 ```
 
 ### Global Variables
@@ -46,6 +47,9 @@ import logging
 #### `encode_image(image_path: str) -> str`
 
 Encodes an image file to base64 format for API transmission.
+
+**Decorators:**
+- `@traceable(run_type="tool", name="encode_image")`: LangSmith tracing for debugging
 
 **Parameters:**
 - `image_path` (str): Absolute or relative path to the image file
@@ -77,6 +81,9 @@ print(f"Encoded length: {len(encoded_img)}")
 #### `analyze_image_with_query(query: str, model: str, encoded_image: str) -> str`
 
 Sends an image and text query to Groq's multimodal LLM for analysis.
+
+**Decorators:**
+- `@traceable(run_type="llm")`: LangSmith tracing for LLM calls and monitoring
 
 **Parameters:**
 - `query` (str): Text prompt or question about the image
@@ -247,29 +254,30 @@ client.audio.transcriptions.create(
 
 **File**: `src/doctors_voice.py`
 
-**Purpose**: Converts text responses to natural-sounding speech using ElevenLabs API.
+**Purpose**: Converts text responses to natural-sounding speech using Google Text-to-Speech (gTTS).
 
 ### Dependencies
 
 ```python
-import os
 from gtts import gTTS
-from elevenlabs.client import ElevenLabs
-from elevenlabs import save
-from dotenv import load_dotenv
+from langsmith import traceable
 ```
 
 ### Global Variables
 
 | Variable | Type | Description | Default |
 |----------|------|-------------|---------|
-| `ELEVENLABS_API_KEY` | str | API key for ElevenLabs | From environment |
+| `language` | str | Language code for speech | "en" |
+| `slow` | bool | Speech speed | False |
 
 ### Functions
 
-#### `text_to_speech_with_elevenlabs(input_text: str, output_filepath: str) -> str`
+#### `text_to_speech_with_gtts(input_text: str, output_filepath: str) -> str`
 
-Converts text to speech using ElevenLabs API with high-quality voice synthesis.
+Converts text to speech using Google Text-to-Speech (gTTS).
+
+**Decorators:**
+- `@traceable`: LangSmith tracing for TTS operations
 
 **Parameters:**
 - `input_text` (str): Text content to convert to speech
@@ -279,38 +287,31 @@ Converts text to speech using ElevenLabs API with high-quality voice synthesis.
 - `str`: Path to the saved audio file
 
 **Raises:**
-- `Exception`: For API errors, invalid voice ID, or file write errors
+- `Exception`: For file write errors or gTTS errors
 
 **Example Usage:**
 ```python
-from doctors_voice import text_to_speech_with_elevenlabs
+from doctors_voice import text_to_speech_with_gtts
 
 response_text = "You appear to have mild dermatitis."
-audio_path = text_to_speech_with_elevenlabs(
+audio_path = text_to_speech_with_gtts(
     input_text=response_text,
     output_filepath="response.mp3"
 )
 print(f"Audio saved to: {audio_path}")
 ```
 
-**Voice Configuration:**
+**Configuration:**
 
 | Parameter | Value | Description |
 |-----------|-------|-------------|
-| `voice_id` | "21m00Tcm4TlvDq8ikWAM" | Rachel voice (female, professional) |
-| `output_format` | "mp3_44100_128" | MP3 at 44.1kHz, 128kbps |
-| `model_id` | "eleven_multilingual_v2" | Supports multiple languages |
-
-**Available Voices:**
-- Rachel (21m00Tcm4TlvDq8ikWAM) - Professional female
-- Adam (pNInz6obpgDQGcFmaJgB) - Deep male
-- Check ElevenLabs Voice Lab for more options
+| `language` | "en" | English language |
+| `slow` | False | Normal speech speed |
 
 **Audio Specifications:**
 - Format: MP3
-- Sample Rate: 44.1 kHz
-- Bitrate: 128 kbps
-- Channels: Mono
+- Quality: Standard gTTS quality
+- Free and no API key required
 
 ---
 
@@ -327,7 +328,7 @@ import streamlit as st
 import logging
 from llm_brain import encode_image, analyze_image_with_query
 from patient_voice import transcribe_with_groq
-from doctors_voice import text_to_speech_with_elevenlabs
+from doctors_voice import text_to_speech_with_gtts
 from utils import createDirIfNotExists
 ```
 
@@ -346,10 +347,10 @@ from utils import createDirIfNotExists
 system_prompt = """You have to act as a professional doctor, i know you are not 
 but this is for learning purpose. What's in this image?. Do you find anything 
 wrong with it medically? If you make a differential, suggest some remedies for 
-them. Donot add any numbers or special characters in your response. Your response 
+them. Do not add any numbers or special characters in your response. Your response 
 should be in one long paragraph. Also always answer as if you are answering to a 
-real person. Donot say 'In the image I see' but say 'With what I see, I think 
-you have ....' Dont respond as an AI model in markdown, your answer should mimic 
+real person. Do not say 'In the image I see' but say 'With what I see, I think 
+you have ....' Do not respond as an AI model in markdown, your answer should mimic 
 that of an actual doctor not an AI bot, Keep your answer concise (max 2 sentences). 
 No preamble, start your answer right away please"""
 ```
@@ -504,11 +505,13 @@ file_path = audio_dir / "recording.mp3"
 | Error Type | Module | Cause | Solution |
 |-----------|--------|-------|----------|
 | `ValueError: GROQ_API_KEY not found` | llm_brain | Missing API key | Add to .env file |
+| `ValueError: LANGCHAIN_TRACING_V2 not found` | llm_brain | Missing LangSmith key (optional) | Add to .env or ignore if not using tracing |
 | `FileNotFoundError` | llm_brain | Image not found | Check file path |
 | `Exception: Error encoding image` | llm_brain | Corrupt file | Verify image integrity |
 | `FileNotFoundError: FFmpeg not found` | patient_voice | FFmpeg not installed | Install FFmpeg |
 | `ValueError: Audio file is required` | patient_voice | No file provided | Check file path |
 | `Exception: transcription error` | patient_voice | API failure | Check API key/quota |
+| `Exception: gTTS error` | doctors_voice | TTS generation failed | Check internet connection |
 | `IOError` | app | File write error | Check permissions |
 | `OSError` | utils | Directory creation | Check permissions |
 
@@ -572,7 +575,10 @@ file_path = audio_dir / "recording.mp3"
 ```env
 # Required
 GROQ_API_KEY=gsk_xxxxxxxxxxxxx
-ELEVENLABS_API_KEY=xxxxxxxxxx
+
+# Optional - LangSmith Tracing
+LANGCHAIN_TRACING_V2=xxxxxxxxxxxxx
+LANGCHAIN_PROJECT=ai-skin-doctor
 
 # Optional (for future use)
 LOG_LEVEL=INFO
@@ -583,12 +589,14 @@ MAX_AUDIO_SIZE=10485760  # 10MB in bytes
 ```txt
 python-dotenv
 groq==0.15.0; python_version >= '3.8'
-elevenlabs
 gtts
 SpeechRecognition
 streamlit
 uvicorn
 pydub
+dotenv
+langchain
+langsmith
 ```
 
 ---

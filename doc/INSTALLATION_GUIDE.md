@@ -36,7 +36,7 @@ Complete step-by-step installation guide for Windows, macOS, and Linux.
 
 You'll need to obtain API keys from:
 1. **Groq** - [https://console.groq.com](https://console.groq.com)
-2. **ElevenLabs** - [https://elevenlabs.io](https://elevenlabs.io)
+2. **LangSmith** (optional, for tracing) - [https://smith.langchain.com](https://smith.langchain.com)
 
 ---
 
@@ -138,7 +138,8 @@ pip install -r requirements.txt
 2. **Add API keys**
    ```env
    GROQ_API_KEY=your_groq_api_key_here
-   ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+   LANGCHAIN_TRACING_V2=your_langsmith_api_key_here
+   LANGCHAIN_PROJECT=ai-skin-doctor
    ```
 
 3. **Save and close**
@@ -235,7 +236,8 @@ open -e .env
 Add:
 ```env
 GROQ_API_KEY=your_groq_api_key_here
-ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+LANGCHAIN_TRACING_V2=your_langsmith_api_key_here
+LANGCHAIN_PROJECT=ai-skin-doctor
 ```
 
 ### Step 8: Run Application
@@ -342,7 +344,8 @@ nano .env
 Add:
 ```env
 GROQ_API_KEY=your_groq_api_key_here
-ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+LANGCHAIN_TRACING_V2=your_langsmith_api_key_here
+LANGCHAIN_PROJECT=ai-skin-doctor
 ```
 
 Save: `Ctrl+O`, Exit: `Ctrl+X`
@@ -362,7 +365,7 @@ streamlit run app.py
 
 1. **Verify Python Packages**
    ```bash
-   pip list | grep -E "groq|streamlit|elevenlabs|pydub"
+   pip list | grep -E "groq|streamlit|langsmith|pydub|gtts"
    ```
 
 2. **Test FFmpeg**
@@ -390,7 +393,7 @@ python -c "from patient_voice import convert_audio_to_mp3; print('Audio processi
 
 **Test Text-to-Speech:**
 ```bash
-python -c "from doctors_voice import text_to_speech_with_elevenlabs; print('TTS ready!')"
+python -c "from doctors_voice import text_to_speech_with_gtts; print('TTS ready!')"
 ```
 
 ---
@@ -574,13 +577,14 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 4. Create new API key
 5. Copy key (starts with `gsk_`)
 
-### ElevenLabs API Key
+### LangSmith API Key (Optional)
 
-1. Visit [https://elevenlabs.io](https://elevenlabs.io)
+1. Visit [https://smith.langchain.com](https://smith.langchain.com)
 2. Sign up or log in
-3. Go to Profile → API Keys
-4. Generate new API key
+3. Go to Settings → API Keys
+4. Create new API key
 5. Copy key
+6. Note: LangSmith is optional for tracing/monitoring
 
 ---
 
@@ -634,8 +638,9 @@ sudo apt remove ffmpeg
 
 - **Streamlit Documentation**: [docs.streamlit.io](https://docs.streamlit.io)
 - **Groq Documentation**: [console.groq.com/docs](https://console.groq.com/docs)
-- **ElevenLabs Documentation**: [elevenlabs.io/docs](https://elevenlabs.io/docs)
+- **LangSmith Documentation**: [docs.smith.langchain.com](https://docs.smith.langchain.com)
 - **FFmpeg Documentation**: [ffmpeg.org/documentation.html](https://ffmpeg.org/documentation.html)
+- **gTTS Documentation**: [gtts.readthedocs.io](https://gtts.readthedocs.io)
 
 ---
 

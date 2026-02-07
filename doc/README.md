@@ -58,9 +58,14 @@ LLMProject/
 - Differential diagnosis suggestions
 
 ### 4. Voice Output
-- Text-to-speech conversion using ElevenLabs
+- Text-to-speech conversion using Google Text-to-Speech (gTTS)
 - Natural-sounding voice responses
 - Audio playback in browser
+
+### 5. Observability & Monitoring
+- LangSmith integration for tracing and monitoring
+- Function-level tracing for debugging
+- Performance monitoring and analytics
 
 ## Technology Stack
 
@@ -68,21 +73,23 @@ LLMProject/
 - **Python 3.10+**: Programming language
 - **Streamlit**: Web application framework
 - **Groq API**: LLM and STT services
-- **ElevenLabs API**: Text-to-speech services
+- **gTTS**: Google Text-to-Speech for voice generation
+- **LangSmith**: Observability and tracing platform
 
 ### Key Libraries
 - `groq==0.15.0`: Groq API client
 - `streamlit`: Web UI framework
 - `SpeechRecognition`: Audio processing
 - `pydub`: Audio format conversion
-- `elevenlabs`: Text-to-speech API
+- `gtts`: Google Text-to-Speech
 - `python-dotenv`: Environment variable management
-- `gtts`: Google Text-to-Speech (alternative)
+- `langsmith`: LangSmith SDK for observability
+- `langchain`: LangChain framework support
 
 ### AI Models Used
 - **Whisper Large V3**: Speech-to-text transcription
 - **Llama 4 Scout 17B**: Multimodal image analysis
-- **ElevenLabs Multilingual V2**: Natural voice synthesis
+- **gTTS**: Google Text-to-Speech for voice synthesis
 
 ## Installation
 
@@ -91,7 +98,7 @@ LLMProject/
 2. FFmpeg (for audio processing)
 3. API Keys:
    - Groq API Key
-   - ElevenLabs API Key
+   - LangSmith API Key (optional, for tracing)
 
 ### Step-by-Step Installation
 
@@ -124,7 +131,8 @@ LLMProject/
    Create a `.env` file in the root directory:
    ```env
    GROQ_API_KEY=your_groq_api_key_here
-   ELEVENLABS_API_KEY=your_elevenlabs_api_key_here
+   LANGCHAIN_TRACING_V2=your_langsmith_api_key_here
+   LANGCHAIN_PROJECT=ai-skin-doctor
    ```
 
 ## Configuration
@@ -134,7 +142,8 @@ LLMProject/
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
 | `GROQ_API_KEY` | Groq API authentication key | Yes | None |
-| `ELEVENLABS_API_KEY` | ElevenLabs API authentication key | Yes | None |
+| `LANGCHAIN_TRACING_V2` | LangSmith API key for tracing | No | None |
+| `LANGCHAIN_PROJECT` | LangSmith project name | No | ai-skin-doctor |
 
 ### Model Configuration
 
@@ -152,8 +161,8 @@ stt_model = "whisper-large-v3"
 
 **doctors_voice.py**:
 ```python
-voice_id = "21m00Tcm4TlvDq8ikWAM"  # Rachel voice
-model_id = "eleven_multilingual_v2"
+language = "en"  # Language for gTTS
+slow = False  # Speech speed
 ```
 
 ### System Prompt Customization
@@ -215,6 +224,9 @@ Encodes an image file to base64 format.
 **Returns:**
 - str: Base64 encoded image string
 
+**Decorators:**
+- `@traceable(run_type="tool", name="encode_image")`: LangSmith tracing
+
 **Raises:**
 - `FileNotFoundError`: If image file doesn't exist
 - `Exception`: For other encoding errors
@@ -234,6 +246,9 @@ Analyzes an image using Groq's multimodal LLM.
 
 **Returns:**
 - str: AI-generated analysis
+
+**Decorators:**
+- `@traceable(run_type="llm")`: LangSmith tracing for LLM calls
 
 **Raises:**
 - `Exception`: If API call fails
@@ -284,8 +299,8 @@ text = transcribe_with_groq("audio.wav", "whisper-large-v3")
 
 ### Module: doctors_voice.py
 
-#### `text_to_speech_with_elevenlabs(input_text: str, output_filepath: str) -> str`
-Converts text to speech using ElevenLabs API.
+#### `text_to_speech_with_gtts(input_text: str, output_filepath: str) -> str`
+Converts text to speech using Google Text-to-Speech (gTTS).
 
 **Parameters:**
 - `input_text` (str): Text to convert
@@ -294,9 +309,12 @@ Converts text to speech using ElevenLabs API.
 **Returns:**
 - str: Path to saved audio file
 
+**Decorators:**
+- `@traceable`: LangSmith tracing enabled
+
 **Example:**
 ```python
-audio_path = text_to_speech_with_elevenlabs(
+audio_path = text_to_speech_with_gtts(
     "Hello patient",
     "output.mp3"
 )
@@ -377,8 +395,9 @@ User Input (Audio + Image)
 
 3. **Response Phase**:
    - AI generates text response
-   - Text converted to speech
+   - Text converted to speech using gTTS
    - Audio file saved
+   - All operations traced via LangSmith
 
 4. **Output Phase**:
    - Display transcription
@@ -464,6 +483,12 @@ Solution: Install FFmpeg and add to system PATH
 ```
 ValueError: GROQ_API_KEY not found in environment variables
 Solution: Create .env file with valid API keys
+```
+
+**5. LangSmith Tracing Issues**
+```
+Warning: LANGCHAIN_TRACING_V2 not found
+Solution: Optional - add LangSmith API key for tracing functionality
 ```
 
 **3. Audio Recording Issues**
